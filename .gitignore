@@ -1,0 +1,62 @@
+# Unreal Engine 5 Generated Files
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+Build/
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.workspace
+*.opendb
+
+# Build results
+*.ue4project
+*.uproject
+Debug/
+Release/
+*.app
+*.dll
+*.exe
+*.so
+*.dylib
+
+# Visual Studio files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Xcode files
+*.xcodeproj/
+*.xcworkspace/
+
+# Asset and cache files
+*.Backup
+*.un~
+Thumbs.db
+
+# Project specific
+*.log
+*.pid
+*.pid.lock
+
+# Content of the project
+/Content/**/AssetCache/
+/Content/**/Backup/
+/Content/**/Collections/
+
+# Plugin specific
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+
+# macOS
+.DS_Store
+
+# Linux
+*~
+
+# Windows
+*.tmp
+*.temp
