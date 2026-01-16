@@ -2,7 +2,12 @@
 
 #include "FirstPerson_Class415Projectile.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Components/SphereComponent.h"
+#include "Components/DecalComponent.h"
+#include "Kismet/GameplayStatics.h"
+
+
 
 AFirstPerson_Class415Projectile::AFirstPerson_Class415Projectile() 
 {
@@ -16,8 +21,12 @@ AFirstPerson_Class415Projectile::AFirstPerson_Class415Projectile()
 	CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
 	CollisionComp->CanCharacterStepUpOn = ECB_No;
 
+	ballMesh = CreateDefaultSubobject<UStaticMeshComponent>("Ball Mesh");
+
 	// Set as root component
 	RootComponent = CollisionComp;
+
+	ballMesh->SetupAttachment(CollisionComp);
 
 	// Use a ProjectileMovementComponent to govern this projectile's movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
@@ -31,6 +40,21 @@ AFirstPerson_Class415Projectile::AFirstPerson_Class415Projectile()
 	InitialLifeSpan = 3.0f;
 }
 
+// created begin play for projectile and when it enters the game.
+void AFirstPerson_Class415Projectile::BeginPlay()
+{
+	Super::BeginPlay();
+	// sets random color generator so it can be applied later.
+	randColor = FLinearColor(UKismetMathLibrary::RandomFloatInRange(0.f, 1.f), UKismetMathLibrary::RandomFloatInRange(0.f, 1.f), UKismetMathLibrary::RandomFloatInRange(0.f, 1.f), 1.f);
+
+	// place holder is defined to then create and plug into the projMat and then apply to the ball/projectile.
+	dmiMat = UMaterialInstanceDynamic::Create(projMat, this);
+	ballMesh->SetMaterial(0, dmiMat);
+
+	// allows the place holder to also change teh color accordingly to the random color generator.
+	dmiMat->SetVectorParameterValue("projColor", randColor);
+}
+
 void AFirstPerson_Class415Projectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	// Only add impulse and destroy projectile if we hit a physics
@@ -40,4 +64,17 @@ void AFirstPerson_Class415Projectile::OnHit(UPrimitiveComponent* HitComp, AActor
 
 		Destroy();
 	}
+
+	if (OtherActor != nullptr)
+	{
+		float frameNum = UKismetMathLibrary::RandomFloatInRange(0.f, 3.f);
+
+		auto Decal = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), baseMat, FVector(UKismetMathLibrary::RandomFloatInRange(20.f, 40.f)), Hit.Location, Hit.Normal.Rotation(), 0.f);
+		auto MatInstance = Decal->CreateDynamicMaterialInstance();
+
+		MatInstance->SetVectorParameterValue("Color", randColor);
+		MatInstance->SetScalarParameterValue("Frame", frameNum);
+
+	}
+	
 }

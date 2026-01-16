@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Materials/MaterialInterface.h"
 #include "FirstPerson_Class415Projectile.generated.h"
+
 
 class USphereComponent;
 class UProjectileMovementComponent;
@@ -22,9 +24,36 @@ class AFirstPerson_Class415Projectile : public AActor
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	UProjectileMovementComponent* ProjectileMovement;
 
+	// used to tie in the ballMesh with the code and colors.
+	UPROPERTY(EditAnywhere)
+		UStaticMeshComponent* ballMesh;
+	
+	// used for base mat for the splash.
+	UPROPERTY(EditAnywhere)
+		UMaterialInterface* baseMat;
+
+	// random color generator for the splat and projectile.
+	UPROPERTY()
+		FLinearColor randColor;
+
+	// used to add the random color to teh projectile.
+	UPROPERTY(EditAnywhere)
+		UMaterialInterface* projMat;
+
+	// place holder to apply to projectile
+	UPROPERTY()
+		UMaterialInstanceDynamic* dmiMat;
+
+
+
+
 public:
 	AFirstPerson_Class415Projectile();
 
+protected:
+	virtual void BeginPlay();
+
+public:
 	/** called when projectile hits something */
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
