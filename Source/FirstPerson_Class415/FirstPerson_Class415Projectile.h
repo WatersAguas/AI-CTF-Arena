@@ -10,6 +10,7 @@
 
 class USphereComponent;
 class UProjectileMovementComponent;
+class UNiagaraSystem;
 
 UCLASS(config=Game)
 class AFirstPerson_Class415Projectile : public AActor
@@ -43,6 +44,10 @@ class AFirstPerson_Class415Projectile : public AActor
 	// place holder to apply to projectile
 	UPROPERTY()
 		UMaterialInstanceDynamic* dmiMat;
+	
+	// Place holder for the color of the Niagara
+	UPROPERTY(EditAnywhere)
+		UNiagaraSystem* colorP;
 
 
 
