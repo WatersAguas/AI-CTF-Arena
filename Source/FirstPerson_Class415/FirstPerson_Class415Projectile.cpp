@@ -8,6 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "PerlinProcTerrain.h"
 
 
 
@@ -85,6 +86,13 @@ void AFirstPerson_Class415Projectile::OnHit(UPrimitiveComponent* HitComp, AActor
 
 		MatInstance->SetVectorParameterValue("Color", randColor);
 		MatInstance->SetScalarParameterValue("Frame", frameNum);
+
+		APerlinProcTerrain* procTerrain = Cast<APerlinProcTerrain>(OtherActor);
+
+		if(procTerrain)
+		{
+			procTerrain->AlterMesh(Hit.ImpactPoint);
+		}
 
 	}
 	
