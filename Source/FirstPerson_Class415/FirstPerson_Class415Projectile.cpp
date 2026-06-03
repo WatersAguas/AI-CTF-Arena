@@ -9,6 +9,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "PerlinProcTerrain.h"
+#include "FirstPerson_Class415Character.h"
 
 
 
@@ -60,12 +61,147 @@ void AFirstPerson_Class415Projectile::BeginPlay()
 
 void AFirstPerson_Class415Projectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+
+	if (!OtherActor || OtherActor == this || OtherActor == ProjectileOwner)
+	{
+		return;
+	}
+
+	if (HandleCharacterHit(OtherActor))
+	{
+		Destroy();
+		return;
+	}
+
+	if (HandlePhysicsHit(OtherComp))
+	{
+		Destroy();
+		return;
+	}
+
+	SpawnHitEffects(HitComp, OtherActor, Hit);
+
+	Destroy();
+
+}
+
+bool AFirstPerson_Class415Projectile::HandleCharacterHit(AActor * OtherActor)
+{
+	AFirstPerson_Class415Character* HitCharacter = Cast< AFirstPerson_Class415Character>(OtherActor);
+
+	if (!HitCharacter)
+	{
+		return false;
+	}
+
+	if (HitCharacter->TeamID == OwnerTeamID)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Friendly Fire Ignored"));
+		return true;
+	}
+
+	HitCharacter->ApplyDamage(DamageAmount);
+	return true;
+}
+
+bool AFirstPerson_Class415Projectile::HandlePhysicsHit(UPrimitiveComponent * OtherComp)
+{
+	if (!OtherComp || !OtherComp->IsSimulatingPhysics())
+	{
+		return false;
+	}
+
+	OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
+	return true;
+
+}
+
+void AFirstPerson_Class415Projectile::SpawnHitEffects(UPrimitiveComponent * HitComp, AActor * OtherActor, const FHitResult & Hit)
+{
+	if (colorP)
+	{
+		UNiagaraComponent* particleComp = UNiagaraFunctionLibrary::SpawnSystemAttached(colorP, HitComp, NAME_None, FVector(-20.f, 0.f, 0.f), FRotator(0.f), EAttachLocation::KeepRelativeOffset, true);
+
+		if (particleComp)
+		{
+			particleComp->SetNiagaraVariableLinearColor(FString("RandomColor"), randColor);
+		}
+
+		if (ballMesh)
+		{
+			ballMesh->DestroyComponent();
+		}
+
+		if (CollisionComp)
+		{
+			CollisionComp->BodyInstance.SetCollisionProfileName("NoCollision");
+		}
+	}
+
+	if (baseMat)
+	{
+		float frameNum = UKismetMathLibrary::RandomFloatInRange(0.f, 3.f);
+
+		UDecalComponent* Decal = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), baseMat, FVector(UKismetMathLibrary::RandomFloatInRange(20.f, 40.f)), Hit.Location, Hit.Normal.Rotation(), 0.f);
+
+			if (Decal)
+			{
+				UMaterialInstanceDynamic* MatInstance = Decal->CreateDynamicMaterialInstance();
+
+				if (MatInstance)
+				{
+					MatInstance->SetVectorParameterValue("Color", randColor);
+					MatInstance->SetScalarParameterValue("Frame", frameNum);
+				}
+			}
+	}
+
+	APerlinProcTerrain* procTerrain = Cast<APerlinProcTerrain>(OtherActor);
+
+	if (procTerrain)
+	{
+		procTerrain->AlterMesh(Hit.ImpactPoint);
+	}
+}
+
+
+
+	/*
+	//ignore owner
+	if (OtherActor == ProjectileOwner)
+	{
+		return;
+	}
+
 	// Only add impulse and destroy projectile if we hit a physics
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && OtherComp->IsSimulatingPhysics())
 	{
 		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 
 		Destroy();
+		return;
+	}
+
+	if (!OtherActor || OtherActor == this)
+	{
+		return;
+	}
+
+	// Apply Damage to Character
+	AFirstPerson_Class415Character* HitCharacter = Cast<AFirstPerson_Class415Character>(OtherActor);
+
+	if (HitCharacter)
+	{
+		if (HitCharacter->TeamID == OwnerTeamID)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Friendly fire Ignored"));
+			Destroy();
+			return;
+		}
+
+		HitCharacter->ApplyDamage(DamageAmount);
+		Destroy();
+		return;
 	}
 
 	if (OtherActor != nullptr)
@@ -94,6 +230,4 @@ void AFirstPerson_Class415Projectile::OnHit(UPrimitiveComponent* HitComp, AActor
 			procTerrain->AlterMesh(Hit.ImpactPoint);
 		}
 
-	}
-	
-}
+	}*/

@@ -23,6 +23,11 @@ UTP_WeaponComponent::UTP_WeaponComponent()
 
 void UTP_WeaponComponent::Fire()
 {
+	if (Character && Character->bIsDead)
+	{
+		return;
+	}
+
 	if (Character == nullptr || Character->GetController() == nullptr)
 	{
 		return;
@@ -44,7 +49,17 @@ void UTP_WeaponComponent::Fire()
 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 	
 			// Spawn the projectile at the muzzle
+			/* 
+			old code
 			World->SpawnActor<AFirstPerson_Class415Projectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			*/
+			AFirstPerson_Class415Projectile* Projectile = World->SpawnActor<AFirstPerson_Class415Projectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+
+			if (Projectile)
+			{
+				Projectile->ProjectileOwner = Character;
+				Projectile->OwnerTeamID = Character->TeamID;
+			}
 		}
 	}
 	
@@ -71,17 +86,17 @@ bool UTP_WeaponComponent::AttachWeapon(AFirstPerson_Class415Character* TargetCha
 	Character = TargetCharacter;
 
 	// Check that the character is valid, and has no weapon component yet
-	if (Character == nullptr || Character->GetInstanceComponents().FindItemByClass<UTP_WeaponComponent>())
+	if (Character == nullptr) // || Character->GetInstanceComponents().FindItemByClass<UTP_WeaponComponent>()
 	{
 		return false;
 	}
 
 	// Attach the weapon to the First Person Character
-	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
-	AttachToComponent(Character->GetMesh1P(), AttachmentRules, FName(TEXT("GripPoint")));
+	// FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
+	// AttachToComponent(Character->GetMesh1P(), AttachmentRules, FName(TEXT("GripPoint")));
 
 	// add the weapon as an instance component to the character
-	Character->AddInstanceComponent(this);
+	// Character->AddInstanceComponent(this);
 
 	// Set up action bindings
 	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))

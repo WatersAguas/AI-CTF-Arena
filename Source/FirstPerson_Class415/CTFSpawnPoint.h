@@ -23,4 +23,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category="CTF Spawn", meta = (DisplayPriority = "1"))
+		int32 TeamID = 0;
+
 };

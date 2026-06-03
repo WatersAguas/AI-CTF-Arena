@@ -5,8 +5,10 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "TimerManager.h"
 #include "FirstPerson_Class415Character.generated.h"
 
+class UTP_WeaponComponent;
 class UInputComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
@@ -36,21 +38,50 @@ class AFirstPerson_Class415Character : public ACharacter
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+		UTP_WeaponComponent* WeaponComponent;
 	
 public:
 	AFirstPerson_Class415Character();
 
 protected:
-	virtual void BeginPlay();
+	virtual void BeginPlay() override;
 
 public:
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CTF")
+		int32 TeamID = 0;
+
 	UPROPERTY(EditAnywhere)
-	bool isTeleporting;
+		bool isTeleporting;
 		
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* LookAction;
+		class UInputAction* LookAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+		float MaxHealth = 100.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+		float CurrentHealth;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+		bool bIsDead = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Combat")
+		float RespawnDelay = 3.0f;
+			
+		FTimerHandle RespawnTimer;
+
+	UFUNCTION(BlueprintCallable)
+	void ApplyDamage(float DamageAmount);
+
+	void Death();
+
+	void Respawn();
+
+	void FindRespawnLocation(FVector& OutLocation, FRotator& OutRotation);
 
 protected:
 	/** Called for movement input */

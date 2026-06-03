@@ -15,7 +15,7 @@ class FIRSTPERSON_CLASS415_API UTP_WeaponComponent : public USkeletalMeshCompone
 
 public:
 	/** Projectile class to spawn */
-	UPROPERTY(EditDefaultsOnly, Category=Projectile)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
 	TSubclassOf<class AFirstPerson_Class415Projectile> ProjectileClass;
 
 	/** Sound to play each time we fire */
@@ -57,4 +57,5 @@ protected:
 private:
 	/** The Character holding this weapon*/
 	AFirstPerson_Class415Character* Character;
+
 };
