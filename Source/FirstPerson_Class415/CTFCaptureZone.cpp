@@ -3,6 +3,8 @@
 
 #include "CTFCaptureZone.h"
 #include "CTFFlag.h"
+#include "CTFAI_Char.h"
+#include "CTFAI_Controller.h"
 #include "FirstPerson_Class415Character.h"
 #include "Components/BoxComponent.h"
 
@@ -82,7 +84,28 @@ void ACTFCaptureZone::OnZoneOverlap(UPrimitiveComponent* OverlappedComp, AActor*
 				UE_LOG(LogTemp, Warning, TEXT("Blue Team Scored! Score: %d"), BlueScore);
 			}
 
+			CarriedFlag->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 			CarriedFlag->ResetFlag();
+
+			ACTFAI_Char* AIChar = Cast<ACTFAI_Char>(Character);
+
+			if (AIChar)
+			{
+				AIChar->bHasFlag = false;
+
+				ACTFAI_Controller* AIController = Cast<ACTFAI_Controller>(AIChar->GetController());
+
+				if (AIController)
+				{
+					AIController->StopMovement();
+
+					GetWorld()->GetTimerManager().SetTimerForNextTick(
+						AIController,
+						&ACTFAI_Controller::MoveToEnemyFlag
+					);
+				}
+			}
+
 			return;
 		}
 	}

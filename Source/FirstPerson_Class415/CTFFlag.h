@@ -41,18 +41,27 @@ public:
 		AActor* CurrentCarrier = nullptr;
 
 	UFUNCTION()
-		void OnFlagOverlap(UPrimitiveComponent* OverlappedComp,AActor* OtherActor,UPrimitiveComponent* OtherComp,int32 OtherBodyIndex,bool bFromSweep,const FHitResult& SweepResult);
+	void OnFlagOverlap(UPrimitiveComponent* OverlappedComp,AActor* OtherActor,UPrimitiveComponent* OtherComp,int32 OtherBodyIndex,bool bFromSweep,const FHitResult& SweepResult);
 
-		void ResetFlag();
+	void ResetFlag();
 
-		FVector StartingLocation;
-		FRotator StartingRotation;
+	FVector StartingLocation;
+	FRotator StartingRotation;
 
+	//drop flag logic
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CTF")
-		float AutoReturnDelay = 10.0f;
+	float AutoReturnDelay = 10.0f;
 
-		FTimerHandle AutoReturnTimer;
+	FTimerHandle AutoReturnTimer;
 
 	void DropFlag(FVector DropLocation);
+
+	//delay pickup of enemy flag after scoring or dropping
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CTF")
+	bool bCanBePickedUp = true;
+
+	FTimerHandle PickupCooldownTimer;
+
+	void EnablePickup();
 
 };

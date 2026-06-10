@@ -2,6 +2,7 @@
 
 
 #include "CTFFlag.h"
+#include "CTFAI_Char.h"
 #include "FirstPerson_Class415Character.h"
 #include "Components/BoxComponent.h"
 
@@ -37,6 +38,11 @@ void ACTFFlag::BeginPlay()
 
 void ACTFFlag::OnFlagOverlap(UPrimitiveComponent* OverlappedComp,AActor* OtherActor,UPrimitiveComponent* OtherComp,int32 OtherBodyIndex,bool bFromSweep,const FHitResult& SweepResult)
 {
+
+	if (!bCanBePickedUp)
+	{
+		return;
+	}
 
 	// verification of being held
 	if (!OtherActor || OtherActor == this || bIsHeld)
@@ -81,6 +87,12 @@ void ACTFFlag::OnFlagOverlap(UPrimitiveComponent* OverlappedComp,AActor* OtherAc
 	bIsHeld = true;
 	CurrentCarrier = OtherActor;
 
+	ACTFAI_Char* AIChar = Cast<ACTFAI_Char>(OtherActor);
+	if (AIChar)
+	{
+		AIChar->bHasFlag = true;
+	}
+
 	AttachToActor(OtherActor, FAttachmentTransformRules::KeepWorldTransform);
 
 	UE_LOG(LogTemp, Warning, TEXT("Flag Picked up by: %s"), *OtherActor->GetName());
@@ -92,9 +104,24 @@ void ACTFFlag::ResetFlag()
 
 	bIsHeld = false;
 	CurrentCarrier = nullptr;
+	bCanBePickedUp = false;
+
+	if (CollisionBox)
+	{
+		CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		CollisionBox->SetGenerateOverlapEvents(false);
+	}
 
 	SetActorLocation(StartingLocation);
 	SetActorRotation(StartingRotation);
+
+	GetWorld()->GetTimerManager().SetTimer(
+		PickupCooldownTimer,
+		this,
+		&ACTFFlag::EnablePickup,
+		0.5f,
+		false
+	);
 
 	UE_LOG(LogTemp, Warning, TEXT("Flag reset."));
 }
@@ -111,6 +138,19 @@ void ACTFFlag::DropFlag(FVector DropLocation)
 	GetWorldTimerManager().SetTimer(AutoReturnTimer,this,&ACTFFlag::ResetFlag,AutoReturnDelay,false);
 
 	UE_LOG(LogTemp, Warning, TEXT("Flag dropped. Returning in %f seconds."), AutoReturnDelay);
+}
+
+void ACTFFlag::EnablePickup()
+{
+	bCanBePickedUp = true;
+
+	if (CollisionBox)
+	{
+		CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		CollisionBox->SetGenerateOverlapEvents(true);
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Flag pickup enabled."));
 }
 
 // Called every frame
