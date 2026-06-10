@@ -93,6 +93,11 @@ void AFirstPerson_Class415Character::Death()
 		return;
 	}
 
+	if (Controller)
+	{
+		Controller->StopMovement();
+	}
+
 	bIsDead = true;
 
 	TArray<AActor*> AttachedActors;
@@ -185,7 +190,12 @@ void AFirstPerson_Class415Character::FindRespawnLocation(FVector& OutLocation, F
 	UE_LOG(LogTemp, Warning, TEXT("No matching spawn point found for TeamID %d."), TeamID);
 }
 
-//////////////////////////////////////////////////////////////////////////// Input
+
+
+
+
+
+//////////////////////////////////// Input /////////////////////////////////////////
 
 void AFirstPerson_Class415Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {	
@@ -214,7 +224,6 @@ void AFirstPerson_Class415Character::SetupPlayerInputComponent(UInputComponent* 
 
 	
 }
-
 
 void AFirstPerson_Class415Character::Move(const FInputActionValue& Value)
 {

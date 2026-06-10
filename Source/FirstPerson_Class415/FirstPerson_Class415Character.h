@@ -79,7 +79,7 @@ public:
 
 	void Death();
 
-	void Respawn();
+	virtual void Respawn();
 
 	void FindRespawnLocation(FVector& OutLocation, FRotator& OutRotation);
 
