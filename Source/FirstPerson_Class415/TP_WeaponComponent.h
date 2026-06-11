@@ -56,6 +56,6 @@ protected:
 
 private:
 	/** The Character holding this weapon*/
-	AFirstPerson_Class415Character* Character;
+	AFirstPerson_Class415Character* Character = nullptr;
 
 };
