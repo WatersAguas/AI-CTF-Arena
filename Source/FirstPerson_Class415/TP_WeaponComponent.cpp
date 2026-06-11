@@ -47,6 +47,8 @@ void UTP_WeaponComponent::Fire()
 			//Set Spawn Collision Handling Override
 			FActorSpawnParameters ActorSpawnParams;
 			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+			ActorSpawnParams.Owner = Character;
+			ActorSpawnParams.Instigator = Character;
 	
 			// Spawn the projectile at the muzzle
 			/* 
@@ -59,6 +61,8 @@ void UTP_WeaponComponent::Fire()
 			{
 				Projectile->ProjectileOwner = Character;
 				Projectile->OwnerTeamID = Character->TeamID;
+
+				UE_LOG(LogTemp, Warning,TEXT("Projectile Spawned - TeamID %d"),Character->TeamID);
 			}
 		}
 	}

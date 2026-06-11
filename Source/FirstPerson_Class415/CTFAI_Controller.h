@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+	// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -17,7 +17,9 @@ class FIRSTPERSON_CLASS415_API ACTFAI_Controller : public AAIController
 public:
 
 	virtual void BeginPlay() override;
+
 	void MoveToEnemyFlag();
+	void MoveToHomeBase();
 
 	FTimerHandle RestartFlagRunTimer;
 
@@ -25,6 +27,6 @@ protected:
 
 	virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
 
-	void MoveToHomeBase();
+	
 	
 };
