@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "TimerManager.h"
+#include "Blueprint/UserWidget.h"
 #include "FirstPerson_Class415Character.generated.h"
 
 class UTP_WeaponComponent;
@@ -14,6 +15,7 @@ class USkeletalMeshComponent;
 class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
+class UUserWidget;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -74,6 +76,21 @@ public:
 			
 		FTimerHandle RespawnTimer;
 
+	// User Widget 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "UI")
+		TSubclassOf<UUserWidget> ScoreboardWidgetClass;
+
+	UPROPERTY()
+		UUserWidget* ScoreboardWidget;
+
+	//used for score but not working without a C++ widget
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CTF")
+		int32 RedScore = 0;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CTF")
+		int32 BlueScore = 0;
+
+	// Damage functions
 	UFUNCTION(BlueprintCallable)
 	void ApplyDamage(float DamageAmount);
 

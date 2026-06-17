@@ -4,6 +4,7 @@
 #include "CTFAI_Controller.h"
 #include "FirstPerson_Class415Projectile.h"
 #include "Kismet/GameplayStatics.h"
+#include "DrawDebugHelpers.h"
 #include "TimerManager.h"
 
 void ACTFAI_Char::Respawn()
@@ -31,6 +32,8 @@ void ACTFAI_Char::Tick(float DeltaTime)
 //will attempt to shoot at player
 void ACTFAI_Char::TryShootEnemy()
 {
+
+
 	if (bIsDead || !bCanShoot)
 	{
 		return;
@@ -45,15 +48,61 @@ void ACTFAI_Char::TryShootEnemy()
 
 	float DistanceToEnemy = FVector::Dist(GetActorLocation(), TargetEnemy->GetActorLocation());
 
+	// 1. ENTER COMBAT based ONLY on distance
 	if (DistanceToEnemy <= AttackRange)
 	{
-		EnterCombat(TargetEnemy);
-		ShootAtTarget(TargetEnemy);
+		if (!bIsInCombat)
+		{
+			EnterCombat(TargetEnemy);
+		}
+
+		// 2. SHOOT ONLY if LOS is valid
+		if (HasLineOfSightTo(TargetEnemy))
+		{
+			ShootAtTarget(TargetEnemy);
+		}
 	}
-	else if (bIsInCombat)
+	else
 	{
-		ExitCombat();
+		if (bIsInCombat)
+		{
+			ExitCombat();
+		}
 	}
+}
+
+// Line of Sight boolean logic
+bool ACTFAI_Char::HasLineOfSightTo(AActor* Target)
+{
+	if (!Target) return false;
+
+	FVector Start = GetActorLocation() + FVector(0.f, 0.f, 90.f);
+	FVector End = Target->GetActorLocation() + FVector(0.f, 0.f, 80.f);
+
+	FHitResult Hit;
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	Params.AddIgnoredActor(Target);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Pawn, Params);
+
+	// DEBUG (TURN ON THIS LINE TEMPORARILY)
+	// DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 0.1f);
+
+	// no hit = clear line of sight
+	if (!bHit)
+	{
+		return true;
+	}
+
+	// hit target = clear line of sight
+	if (Hit.GetActor() == Target)
+	{
+		return true;
+	}
+
+	return false;
 }
 
 // Find closest enemy to shoot at
@@ -114,33 +163,66 @@ void ACTFAI_Char::ShootAtTarget(AActor* Target)
 		return;
 	}
 
-	FVector TargetLocation = Target->GetActorLocation() + FVector(0.f, 0.f, 50.f);
+	// ===== LINE OF SIGHT CHECK =====
+
+	FVector Start = GetActorLocation() + FVector(0.f, 0.f, 60.f);
+	FVector End = Target->GetActorLocation() + FVector(0.f, 0.f, 50.f);
+
+	FHitResult HitResult;
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	// IMPORTANT: ignore other AI characters too (prevents AI-to-AI weird hits)
+	Params.AddIgnoredActors(TArray<AActor*>{ Target });
+
+	// Trace
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
+
+	// DEBUG (TURN ON THIS LINE TEMPORARILY)
+	// DrawDebugLine(GetWorld(), Start, End, FColor::Green, false, 0.1f);
+
+	// If we hit SOMETHING and it's NOT the target ? blocked
+	if (bHit && HitResult.GetActor() != Target)
+	{
+		return;
+	}
+
+	// ===== SHOOT Logic =====
+
+	FVector TargetLocation = End;
 
 	FVector Direction = TargetLocation - GetActorLocation();
 	Direction.Normalize();
 
-	FVector SpawnLocation = GetActorLocation() + Direction * ProjectileSpawnDistance + FVector(0.f, 0.f, ProjectileSpawnHeight);
+	FVector SpawnLocation =
+		GetActorLocation()
+		+ Direction * ProjectileSpawnDistance
+		+ FVector(0.f, 0.f, ProjectileSpawnHeight);
 
 	FRotator SpawnRotation = Direction.Rotation();
 
 	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+	SpawnParams.SpawnCollisionHandlingOverride =
+		ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+
 	SpawnParams.Owner = this;
 	SpawnParams.Instigator = this;
 
-	AFirstPerson_Class415Projectile* Projectile = GetWorld()->SpawnActor<AFirstPerson_Class415Projectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
+	AFirstPerson_Class415Projectile* Projectile =
+		GetWorld()->SpawnActor<AFirstPerson_Class415Projectile>(ProjectileClass, SpawnLocation, SpawnRotation, SpawnParams);
 
 	if (Projectile)
 	{
 		Projectile->ProjectileOwner = this;
 		Projectile->OwnerTeamID = TeamID;
-
-		UE_LOG(LogTemp, Warning, TEXT("AI fired projectile. AI TeamID: %d"), TeamID);
 	}
 
 	bCanShoot = false;
 
 	GetWorldTimerManager().SetTimer(FireRateTimer, this, &ACTFAI_Char::ResetCanShoot, FireRate, false);
+
+	//SetActorRotation(Direction.Rotation());
 }
 
 // allows AI to shoot after the delay 
@@ -151,6 +233,11 @@ void ACTFAI_Char::ResetCanShoot()
 
 void ACTFAI_Char::EnterCombat(AFirstPerson_Class415Character* TargetEnemy)
 {
+	if (bIsInCombat)
+	{
+		return; // prevent re-entry spam
+	}
+
 	if (!TargetEnemy)
 	{
 		return;
@@ -159,11 +246,6 @@ void ACTFAI_Char::EnterCombat(AFirstPerson_Class415Character* TargetEnemy)
 	bIsInCombat = true;
 
 	ACTFAI_Controller* AIController = Cast<ACTFAI_Controller>(GetController());
-
-	if (AIController)
-	{
-		AIController->StopMovement();
-	}
 
 	FVector Direction = TargetEnemy->GetActorLocation() - GetActorLocation();
 	Direction.Z = 0.f;
