@@ -6,6 +6,7 @@
 #include "CTFAI_Char.h"
 #include "CTFAI_Controller.h"
 #include "FirstPerson_Class415Character.h"
+#include "UObject/Interface.h"
 #include "Components/BoxComponent.h"
 
 // Sets default values
@@ -44,7 +45,7 @@ void ACTFCaptureZone::OnZoneOverlap(UPrimitiveComponent* OverlappedComp, AActor*
 
 	if (!Character)
 	{
-		return;
+	return;
 	}
 
 	if (Character->bIsDead)
@@ -84,6 +85,32 @@ void ACTFCaptureZone::OnZoneOverlap(UPrimitiveComponent* OverlappedComp, AActor*
 				UE_LOG(LogTemp, Warning, TEXT("Blue Team Scored! Score: %d"), BlueScore);
 			}
 
+			UE_LOG(LogTemp, Warning, TEXT("SENDING SCORE -> Red: %d Blue: %d"), RedScore, BlueScore);
+
+
+			//UI Addition
+			APlayerController* PC = GetWorld()->GetFirstPlayerController();
+			AFirstPerson_Class415Character* PlayerChar = Cast<AFirstPerson_Class415Character>(PC->GetPawn());
+
+			if (PlayerChar && PlayerChar->ScoreboardWidget)
+			{
+				UFunction* Func = PlayerChar->ScoreboardWidget->FindFunction(TEXT("UpdateScore"));
+
+				if (Func)
+				{
+					struct
+					{
+						int32 RedScore;
+						int32 BlueScore;
+					} Params;
+
+					Params.RedScore = RedScore;
+					Params.BlueScore = BlueScore;
+
+					PlayerChar->ScoreboardWidget->ProcessEvent(Func, &Params);
+				}
+			}
+
 			CarriedFlag->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 			CarriedFlag->ResetFlag();
 
@@ -110,5 +137,5 @@ void ACTFCaptureZone::OnZoneOverlap(UPrimitiveComponent* OverlappedComp, AActor*
 		}
 	}
 
-}
+}	
 

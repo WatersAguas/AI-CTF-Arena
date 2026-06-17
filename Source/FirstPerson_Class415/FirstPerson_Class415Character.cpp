@@ -13,6 +13,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Blueprint/UserWidget.h"
 #include "Engine/LocalPlayer.h"
 
 
@@ -64,6 +65,36 @@ void AFirstPerson_Class415Character::BeginPlay()
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("GripPoint Missing"));
+	}
+
+	// skips the widget addon for the AI.
+	if (!IsPlayerControlled())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Skipping UI for AI: %s"), *GetName());
+		return;
+	}
+
+	// Checks if player has widget
+	UE_LOG(LogTemp, Warning, TEXT("BEGINPLAY: %s | Class Default Object? %d | PlayerControlled: %d"),
+		*GetName(),
+		HasAnyFlags(RF_ClassDefaultObject),
+		IsPlayerControlled());
+
+	//gets controller from the player
+	APlayerController* PC = Cast<APlayerController>(GetController());
+
+	// tests the controller and creates teh widget for the player
+	if (PC && PC->IsLocalController() && ScoreboardWidgetClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Creating UI for: %s"), *GetName());
+
+		ScoreboardWidget = CreateWidget<UUserWidget>(PC, ScoreboardWidgetClass);
+
+		if (ScoreboardWidget)
+		{
+			ScoreboardWidget->AddToViewport();
+			UE_LOG(LogTemp, Warning, TEXT("UI SUCCESSFULLY ADDED"));
+		}
 	}
 	
 }

@@ -25,6 +25,7 @@ public:
 	// Flag control
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CTF")
 	bool bHasFlag = false;
+	bool HasLineOfSightTo(AActor* Target);
 
 
 	// AI movement
